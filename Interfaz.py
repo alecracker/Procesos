@@ -15,6 +15,9 @@ def crear_interfaz(grafica):
     ventana.tk.call("source", "Forest-ttk-theme/forest-light.tcl")
     estilo = ttk.Style(ventana)
     estilo.theme_use("forest-light")
+    frame_izquierdo = ttk.Frame(ventana)
+    frame_derecho = ttk.Frame(ventana)
+
     #Titulo
 
     etiqueta_titulo = ttk.Label(ventana, text="Software de Procesos Psicrometricos", font=("Arial", 20, "bold"), foreground="black")
@@ -36,43 +39,46 @@ def crear_interfaz(grafica):
     #PROPIEDADES
 
     var_propiedades_1 = tk.StringVar()
-    etiqueta_prop_iniciales = ttk.Label(ventana, text = "Propiedades Iniciales")
+    etiqueta_prop_iniciales = ttk.Label(frame_izquierdo, text = "Propiedades Iniciales")
     lista_propiedades = ["Temperatura de bulbo seco", "Temperatura de bulbo humedo", "Humedad relativa", "Entalpia", "Volumen especifico", "Humedad absoluta"]
-    etiqueta_prop_1 = ttk.Label(ventana, text="Propiedad 1:")
-    Prop_1 = ttk.Combobox(ventana, values=lista_propiedades, state="r", textvariable = var_propiedades_1)
+    etiqueta_prop_1 = ttk.Label(frame_izquierdo, text="Propiedad 1:")
+    Prop_1 = ttk.Combobox(frame_izquierdo, values=lista_propiedades, state="r", textvariable = var_propiedades_1)
     Prop_1.current(0)
-    Prop_1_text = ttk.Entry(ventana) 
+    Prop_1_text = ttk.Entry(frame_izquierdo) 
    
     var_propiedades_2 = tk.StringVar()
-    etiqueta_prop_2 = ttk.Label(ventana, text = "Propiedad 2:")
-    Prop_2 = ttk.Combobox(ventana, values=lista_propiedades, state="r", textvariable = var_propiedades_2)
+    etiqueta_prop_2 = ttk.Label(frame_izquierdo, text = "Propiedad 2:")
+    Prop_2 = ttk.Combobox(frame_izquierdo, values=lista_propiedades, state="r", textvariable = var_propiedades_2)
     Prop_2.current(0)
-    Prop_2_text = ttk.Entry(ventana)
+    Prop_2_text = ttk.Entry(frame_izquierdo)
   
 
     #CONDICIONES
     
-    etiqueta_Cond_defectos = ttk.Label(ventana, text = "Condiciones por Defecto:")
+    etiqueta_Cond_defectos = ttk.Label(frame_izquierdo, text = "Condiciones por Defecto:")
     altitud_bool = tk.BooleanVar()
     flujo_air_bool = tk.BooleanVar()
     presion_bool = tk.BooleanVar()
     altitud_var = tk.StringVar()
     flujo_var = tk.StringVar()
     presion_var = tk.StringVar()
-    altitud_check = ttk.Checkbutton(ventana, text="Altitud", variable=altitud_bool)
-    altitud_text = ttk.Entry(ventana, textvariable = altitud_var)
-    flujo_check = ttk.Checkbutton(ventana, text="Flujo de Aire", variable=flujo_air_bool)
-    flujo_text = ttk.Entry(ventana, textvariable = flujo_var)
-    presion_check = ttk.Checkbutton(ventana, text="Presion del Sistema", variable=presion_bool)
-    presion_text = ttk.Entry(ventana, textvariable = presion_var)
-    traza_text = ttk.Label(ventana, text="Armar trazo")
+    altitud_check = ttk.Checkbutton(frame_izquierdo, text="Altitud", variable=altitud_bool)
+    altitud_text = ttk.Entry(frame_izquierdo, textvariable = altitud_var)
+    flujo_check = ttk.Checkbutton(frame_izquierdo, text="Flujo de Aire", variable=flujo_air_bool)
+    flujo_text = ttk.Entry(frame_izquierdo, textvariable = flujo_var)
+    presion_check = ttk.Checkbutton(frame_izquierdo, text="Presion del Sistema", variable=presion_bool)
+    presion_text = ttk.Entry(frame_izquierdo, textvariable = presion_var)
+    traza_text = ttk.Label(frame_izquierdo, text="Armar trazo")
     
     def traza_2_puntos(punto1, punto2):
         
         
             linea2(punto1,punto2)
             print("Traza de 2 puntos")
-            
+    
+    def traza_3_puntos(punto1, punto2, punto3):
+        Funciones.linea3(punto1, punto2, punto3)
+        print("Traza de 3 puntos")
         
     def accion_añadir():
 
@@ -88,11 +94,12 @@ def crear_interfaz(grafica):
                 "prop_ini_2" : Prop_2_text.get(),
                 "Altitud" : altitud_text.get(),
                 "Flujo" : flujo_text.get(),
-                "Presion" : presion_text.get()
-                
+                "Presion" : presion_text.get(),
+                "Und_1" : Prop_1.get(),
+                "Und_2" : Prop_2.get()
         
             }
-            punto_graf = Punto(nombre_P, datos_punto["prop_ini_1"], datos_punto["prop_ini_2"], datos_punto["Altitud"], datos_punto["Flujo"], datos_punto["Presion"], 0, 0)
+            punto_graf = Punto(nombre_P, datos_punto["prop_ini_1"], datos_punto["prop_ini_2"], datos_punto["Altitud"], datos_punto["Flujo"], datos_punto["Presion"], 0, 0, datos_punto["Und_1"], datos_punto["Und_2"])
             
         elif flujo_air_bool.get() == True and altitud_bool.get() == False and presion_bool.get() == False:
             datos_punto = {
@@ -101,10 +108,11 @@ def crear_interfaz(grafica):
                 "prop_ini_2" : Prop_2_text.get(),
                 "Altitud" : altitud_text.get(),
                 "Flujo" : flujo_text.get(),
-                "Presion" : presion_text.get()
-        
+                "Presion" : presion_text.get(),
+                "Und_1" : Prop_1.get(),
+                "Und_2" : Prop_2.get()
             } 
-            punto_graf = Punto(nombre_P, datos_punto["prop_ini_1"], datos_punto["prop_ini_2"], datos_punto["Altitud"], datos_punto["Flujo"], datos_punto["Presion"], 0, 0)
+            punto_graf = Punto(nombre_P, datos_punto["prop_ini_1"], datos_punto["prop_ini_2"], datos_punto["Altitud"], datos_punto["Flujo"], datos_punto["Presion"], 0, 0, datos_punto["Und_1"], datos_punto["Und_2"]   )
         else:
 
             datos_punto = {
@@ -113,13 +121,15 @@ def crear_interfaz(grafica):
                 "prop_ini_2" : Prop_2_text.get(),
                 "Altitud" : 0,
                 "Flujo" : 1000,
-                "Presion" : 101325
+                "Presion" : 101325,
+                "Und_1" : Prop_1.get(),
+                "Und_2" : Prop_2.get()
 
             }
-            punto_graf = Punto(nombre_P, float(datos_punto["prop_ini_1"]), float(datos_punto["prop_ini_2"]), float(datos_punto["Altitud"]), float(datos_punto["Flujo"]), float(datos_punto["Presion"]), 0, 0)
-            puntos_guardados[nombre_P] = punto_graf
+            punto_graf = Punto(nombre_P, float(datos_punto["prop_ini_1"]), float(datos_punto["prop_ini_2"]), float(datos_punto["Altitud"]), float(datos_punto["Flujo"]), float(datos_punto["Presion"]), 0, 0, datos_punto["Und_1"], datos_punto["Und_2"])
             
-         
+        
+        puntos_guardados[nombre_P] = punto_graf    
         punto_graf.dibujo(grafica)
         print(f"Punto añadido: {nombre_P} {datos_punto}")
         
@@ -141,6 +151,17 @@ def crear_interfaz(grafica):
         Prop_2.current(0)
         print(f"limpiado ")   
     
+    def enlistar_puntos():
+                
+        lista_puntos = list(puntos_guardados.values())
+        if len(lista_puntos) == 2:
+            traza_2_puntos(lista_puntos[0], lista_puntos[1])
+        elif len(lista_puntos) == 3:
+            traza_3_puntos(lista_puntos[0], lista_puntos[1], lista_puntos[2])   
+        elif len(lista_puntos) == 1:
+            print("No hay suficientes puntos para trazar")
+        
+
     def accion_simular():
 
         proceso_elegido = var_proceso.get()
@@ -150,22 +171,11 @@ def crear_interfaz(grafica):
 
         for nombre, punto in puntos_guardados.items():
             punto.dibujo(grafica)
-
-      
     
-    def accion_trazo():
-                
-        lista_puntos = list(puntos_guardados.values())
-        if len(lista_puntos) >= 2:
-            traza_2_puntos(lista_puntos[0], lista_puntos[1])
-        else:
-            print("No hay suficientes puntos para trazar")
-
-    
-    ventana.destroy()
-    plt.tight_layout()
+        ventana.destroy()
+        plt.tight_layout()
         
-    plt.show()
+        plt.show()
     
   
         
@@ -173,15 +183,15 @@ def crear_interfaz(grafica):
 
     #BOTONES
 
-    boton_añadir = ttk.Button(ventana, text="Añadir Punto", command = accion_añadir)
+    boton_añadir = ttk.Button(frame_izquierdo, text="Añadir Punto", command = accion_añadir)
    
-    boton_Editar = ttk.Button(ventana, text="Editar Punto", command = accion_editar)
+    boton_Editar = ttk.Button(frame_izquierdo, text="Editar Punto", command = accion_editar)
 
-    boton_resetear = ttk.Button(ventana, text="Limpiar Campos", command= accion_limpiar)
+    boton_resetear = ttk.Button(frame_izquierdo, text="Limpiar Campos", command= accion_limpiar)
 
-    boton_simular = ttk.Button(ventana, text="Simular", command = accion_simular)
+    boton_simular = ttk.Button(frame_izquierdo, text="Simular", command = accion_simular)
     
-    boton_trazo = ttk.Button(ventana, text = "Trazo", command= traza_2_puntos)
+    boton_trazo = ttk.Button(frame_izquierdo, text = "Trazo", command= enlistar_puntos)
     
     
 
@@ -228,14 +238,16 @@ def crear_interfaz(grafica):
     
     #ENTRY PARA GUARDAR EL NUMERO DEL PUNTO
 
-    etiqueta_punto = ttk.Label(ventana, text="Nombre del Punto:")
+    etiqueta_punto = ttk.Label(frame_izquierdo, text="Nombre del Punto:")
     etiqueta_punto.grid(column=0, row = 4, pady=2, sticky="e")
-    Nm_punto = ttk.Entry(ventana)
+    Nm_punto = ttk.Entry(frame_izquierdo)
     Nm_punto.grid(column=1, row = 4, pady=5, padx=5, sticky="w")
 
 
+    #FRAMES
 
-
+    frame_izquierdo.grid(row=0,column=1,padx=10,pady=10,sticky="n")
+    frame_derecho.grid(row = 0, column=1, padx = 10, pady = 10, sticky="n")
 
     #Ventana
     ventana.title("Simulador Psicometrico")

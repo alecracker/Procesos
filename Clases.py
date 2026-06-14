@@ -4,7 +4,7 @@ pb.SetUnitSystem(pb.SI)
 
 class Punto:
     
-    def __init__(self, nombre, Tdb, W, RH, Twb, TDp, H, v):
+    def __init__(self, nombre, Tdb, W, RH, Twb, TDp, H, v , und1, und2):
         
         self.nombre = nombre
         self.Tdb = Tdb #Eje X
@@ -14,6 +14,8 @@ class Punto:
         self.TDp = TDp
         self.H = H
         self.v = v
+        self.und1 = und1
+        self.und2 = und2
         
     def dibujo(self, grafica):
 
