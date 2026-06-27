@@ -22,7 +22,8 @@ puntos_guardados = {}
 class VentanaPrincipal:
 
 
-    def __init__(self,grafica):
+    def __init__(self,ps_card):
+        self.ps_card = ps_card 
         self.ventana = tk.Tk()
         self.ventana.tk.call("source", "Forest-ttk-theme/forest-light.tcl")
         estilo = ttk.Style(self.ventana)
@@ -103,7 +104,7 @@ class VentanaPrincipal:
         self.presion_var = tk.StringVar(self.ventana)
         self.altitud_var.set(0)
         self.tipo_flujo_var.set("Flujo volumetrico")
-        self.flujo_var.set(0)
+        self.flujo_var.set(1000)
         self.presion_var.set(101325)
         
         self.altitud_check = ttk.Checkbutton(self.frame_izquierdo, text="Altitud", variable=self.altitud_bool)
@@ -167,15 +168,37 @@ class VentanaPrincipal:
 
         # FRAMES
         self.frame_izquierdo.grid(row=0, column=0, padx=10, pady=10, sticky="n")
-        self.frame_derecho.grid(row=0, column=1, padx=10, pady=10, sticky="n")
+        self.frame_derecho.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
-        # FRAME DERCHO
-        self.caja_info = tk.Text(self.frame_derecho, width=100, height=50)
-        self.caja_info.grid(row=0, column=0)
+        # FRAME DERECHO (Caja de información)
+        self.caja_info = tk.Text(
+            self.frame_derecho, 
+            font=("Consolas", 11),  
+            bg="#f8f9fa",           
+            fg="#2c3e50",           
+            padx=20, pady=20,       
+            relief="flat"           
+        )
+        
+        # Hacemos que la caja cubra TODO el frame derecho (nsew)
+        self.caja_info.grid(row=0, column=0, sticky="nsew")
+        
+        # --- EL TRUCO DE LA EXPANSIÓN ---
+        # 1. Le decimos al frame derecho que expanda la caja por dentro
+        self.frame_derecho.grid_rowconfigure(0, weight=1)
+        self.frame_derecho.grid_columnconfigure(0, weight=1)
+        
+        # 2. Le decimos a la ventana principal que todo el espacio sobrante se lo regale al lado derecho (columna 1)
+        self.ventana.grid_rowconfigure(0, weight=1)
+        self.ventana.grid_columnconfigure(1, weight=1)
+
+
 
         # Ventana
         self.ventana.title("Simulador Psicometrico")
         self.ventana.state("zoomed")
+        self.actualizar_unidades(None)
+        self.actualizar_unidad_flujo(None)
         self.ventana.mainloop()
 
 
@@ -195,7 +218,17 @@ class VentanaPrincipal:
         nombre_P = self.Nm_punto.get()
         if nombre_P == "":
             msg.showwarning("Cuidado", "El punto guardado no tiene nombre")
-            print("punto sin nombre")
+        
+                
+        if len(self.puntos_guardados) >= 1:
+            
+            primer_punto = list(self.puntos_guardados.values())[0]
+            
+            # Comparacion de procesos
+            if primer_punto.proceso != self.lista_procesos.get():
+                msg.showerror("Error", f"No puedes cambiar el proceso a mitad de camino. Empezaste simulando un '{primer_punto.proceso}'.")
+                return
+
         altitud = 0
         flujo = 1000
         presion = 101325
@@ -233,6 +266,9 @@ class VentanaPrincipal:
             msg.showerror("Error", "Las propiedades no son correctas (Se necesita la Temperatura de bulbo seco)")
             return
         
+        elif self.Prop_1.get() == "Temperatura de bulbo seco" and self.Prop_2.get() == "Temperatura de bulbo seco":
+            msg.showerror("Error", "No puedes seleccionar 'Temperatura de bulbo seco' en ambas casillas.")
+            return
         # 4. Validar que seleccionaron un proceso
         if self.lista_procesos.get() == "":
             msg.showwarning("Cuidado", "El punto guardado no tiene proceso")
@@ -259,25 +295,117 @@ class VentanaPrincipal:
         
         self.punto_acal = Punto(nombre_P,datos_punto['proceso'], float(datos_punto["prop_ini_1"]), float(datos_punto["prop_ini_2"]), float(datos_punto["Altitud"]), float(datos_punto["Flujo"]), datos_punto["Tipo_flujo"], float(datos_punto["Presion"]), datos_punto["Und_1"], datos_punto["Und_2"], 0 , 0, 0, 0, 0, 0,0,0)
         # 2. Hace el cálculo internamente
-        self.punto_acal.calculo(datos_punto["prop_ini_1"],datos_punto["prop_ini_2"], datos_punto["Und_1"], datos_punto["Und_2"] )
+                
+        try:
+            self.punto_acal.calculo(datos_punto["prop_ini_1"],datos_punto["prop_ini_2"], datos_punto["Und_1"], datos_punto["Und_2"] )
+            
+            # Validación manual: Que no se salga de los límites visuales de tu carta gráfica
+            if self.punto_acal.Tdb < -10 or self.punto_acal.Tdb > 55 or self.punto_acal.W < 0 or self.punto_acal.W > 0.033:
+                msg.showerror("Fuera de rango", "El punto se sale de los límites de la carta psicrométrica (-10 a 55 °C, o Humedad mayor a 33 g/kg).")
+                return
+                
+        except Exception:
+            # Si psychrolib colapsa porque la matemática no cuadra (Ej. Bulbo Húmedo > Seco)
+            msg.showerror("Error Termodinámico", "Los valores ingresados son físicamente imposibles de calcular.")
+            return
              
-        # 3. Guardamos el objeto REAL en el diccionario
+        # 3. Guardamos el objeto REAL en el diccionario 
         self.puntos_guardados[nombre_P] = self.punto_acal  
-            
-        print(f"Punto añadido: {nombre_P} {datos_punto}")
-        self.caja_info.insert(tk.END, f"Punto añadido: {nombre_P} \n Prop_1: {datos_punto['prop_ini_1']} {datos_punto['Und_1']} | Prop_2: {datos_punto['prop_ini_2']} {datos_punto['Und_2']}\n Altitud: {datos_punto['Altitud']} | Flujo: {datos_punto['Flujo']} | Presion: {datos_punto['Presion']}\n")
 
+               
+        
+
+        print(f"Punto añadido: {nombre_P} {datos_punto}")
+                # Formato de tarjeta limpia y profesional para la bitácora
+        mensaje_bonito = (
+            f"✅ PUNTO AÑADIDO: [ {nombre_P} ]\n"
+            f"{'-'*55}\n"
+            f"🌡️ Propiedades:\n"
+            f"   • {datos_punto['Und_1']}: {datos_punto['prop_ini_1']}\n"
+            f"   • {datos_punto['Und_2']}: {datos_punto['prop_ini_2']}\n\n"
+            f"⚙️ Condiciones del Sistema:\n"
+            f"   • Flujo: {datos_punto['Flujo']} ({datos_punto['Tipo_flujo']})\n"
+            f"   • Presión: {datos_punto['Presion']} Pa\n"
+            f"{'='*55}\n\n"
+        )
+        self.caja_info.insert(tk.END, mensaje_bonito)
+
+        
+                
+        if self.lista_procesos.get() == "Enfriamiento" or self.lista_procesos.get() == "Calentamiento":
             
             
+            if len(self.puntos_guardados) == 1:
+                msg.showinfo("Aviso de Termodinámica", "En los procesos de enfriamiento y calentamiento sensible, el contenido de humedad absoluta (W) no varía. Por lo tanto, se tomará como constante, de manera que para añadir el segundo punto solo se considera la temperatura de bulbo seco y se va directamente a la opción de simular.")
+
+       
+        
         
     def accion_editar(self):
+        nombre_P = self.Nm_punto.get()
+        
+        
+        if nombre_P == "":
+            msg.showwarning("Cuidado", "Ingresa el nombre del punto que quieres editar.")
+            return
+            
+        if nombre_P not in self.puntos_guardados:
+            msg.showerror("Error", f"El punto '{nombre_P}' no existe. Usa 'Añadir Punto' para crearlo primero.")
+            return
+            
+        # Validar que las propiedades no estén vacías
+        if self.Prop_1_text.get() == "" or self.Prop_2_text.get() == "":
+            msg.showwarning("Cuidado", "Faltan propiedades para editar el punto.")
+            return
+            
+        # Validar que sí sean números
+        try:
+            float(self.Prop_1_text.get())
+            float(self.Prop_2_text.get())
+        except ValueError:
+            msg.showerror("Error", "¡Debes ingresar solo números en las propiedades!")
+            return
+            
+        # Validar que tengan Bulbo Seco seleccionado
+        if self.Prop_1.get() != "Temperatura de bulbo seco" and self.Prop_2.get() != "Temperatura de bulbo seco":
+            msg.showerror("Error", "Las propiedades no son correctas (Se necesita la Temperatura de bulbo seco)")
+            return
 
-        proceso_elegido = self.lista_procesos.get()
-        print(f"Editando: {proceso_elegido} ")
+        # Recoger datos de condiciones (Altitud, Flujo, Presión)
+        altitud = self.altitud_text.get() if (self.altitud_bool.get() and self.altitud_text.get() != "") else 0
+        flujo = self.flujo_text.get() if (self.flujo_bool.get() and self.flujo_text.get() != "") else 1000
+        presion = self.presion_text.get() if (self.presion_bool.get() and self.presion_text.get() != "") else 101325
+            
+        # Para evitar que el usuario cambie de proceso al editar, mantenemos el proceso original
+        proceso_original = self.puntos_guardados[nombre_P].proceso
+        
+        # Creamos el punto editado
+        punto_editado = Punto(
+            nombre_P, proceso_original, 
+            float(self.Prop_1_text.get()), float(self.Prop_2_text.get()), 
+            float(altitud), float(flujo), self.tipo_flujo_var.get(), float(presion), 
+            self.Prop_1.get(), self.Prop_2.get(), 
+            0, 0, 0, 0, 0, 0, 0, 0
+        )
+        
+        
+        punto_editado.calculo(self.Prop_1_text.get(), self.Prop_2_text.get(), self.Prop_1.get(), self.Prop_2.get())
+        
+        
+        self.puntos_guardados[nombre_P] = punto_editado
+        
+        
+        msg.showinfo("Éxito", f"El punto '{nombre_P}' se ha actualizado correctamente.")
+        self.caja_info.insert(tk.END, f"Punto EDITADO: {nombre_P} | Prop_1: {self.Prop_1_text.get()} {self.Prop_1.get()} | Prop_2: {self.Prop_2_text.get()} {self.Prop_2.get()}\n")
+
         
     def accion_limpiar(self):
 
-    
+        
+        self.Nm_punto.delete(0, tk.END)
+        self.Prop_1_text.delete(0, tk.END)
+        self.Prop_2_text.delete(0, tk.END)
+        self.caja_info.delete('1.0', tk.END)
         self.puntos_guardados.clear()
         self.lista_procesos.current(0)
         self.altitud_var.set("") 
@@ -305,11 +433,11 @@ class VentanaPrincipal:
             "Humedad absoluta": "[g/kg]"
         }
         
-        # Leemos qué eligió el usuario en ambas listas
+        
         seleccion_1 = self.Prop_1.get()
         seleccion_2 = self.Prop_2.get()
         
-        # Cambiamos el texto de la etiqueta mágicamente
+   
         self.unidad_prop1.config(text=diccionario_unidades.get(seleccion_1, ""))
         self.unidad_prop2.config(text=diccionario_unidades.get(seleccion_2, ""))
 
@@ -331,9 +459,10 @@ class VentanaPrincipal:
 
            
             if len(self.lista_puntos) != 2:
-                print("Los enfriamientos y calentamientos utilizan 2 puntos")
+                msg.showwerror("Los enfriamientos y calentamientos utilizan 2 puntos")
                 return  
             elif len(self.lista_puntos) == 2:
+              
                 self.lista_puntos[1].W = self.lista_puntos[0].W
                 self.lista_puntos[1].RH = pb.GetRelHumFromHumRatio(self.lista_puntos[1].Tdb, self.lista_puntos[1].W, self.lista_puntos[1].p)
                     
@@ -448,7 +577,7 @@ class VentanaPrincipal:
                 # Ventana emergente de resultados
             
                 humedad_total = flujo_masico_total * W3 * 3600 # kg/h
-                msg.showinfo("Resultados de Mezcla", f"Flujo Másico Total: {flujo_masico_total:.2f} kg/s\nHumedad Total: {humedad_total:.2f} kg/h")
+                msg.showinfo("Resultados de Mezcla", f"Flujo Másico Total: {flujo_masico_total:.2f} kg/min")
                 
             elif p1.tipo_flujo == "Flujo volumetrico" and p2.tipo_flujo == "Flujo volumetrico":
                 # Convertir flujo volumétrico a flujo másico dividiendo entre volumen específico
@@ -496,12 +625,12 @@ class VentanaPrincipal:
                 self.traza_3_puntos(self.lista_puntos[0], self.lista_puntos[1], self.lista_puntos[2])
                 
                 # Ventana emergente con resultados
-                calor_total = masa_total * H3
-                humedad_total = masa_total * W3 * 3600
-                msg.showinfo("Resultados de Mezcla", f"Flujo Volumétrico Total: {flujo_vol_total:.2f} m³/s\nCalor Total de la Mezcla: {calor_total:.2f} kW\nHumedad Total: {humedad_total:.2f} kg/h")
             
-        manager = plt.get_current_fig_manager()
-        self.grafica = plt.gca()
+                humedad_total = flujo_masico_total * W3 * 3600
+                msg.showinfo("Resultados de Mezcla", f"Flujo Volumétrico Total: {flujo_vol_total:.2f} m³/s\nHumedad Total: {humedad_total:.2f} kg/h")
+            
+        plt.close('all') # Cierra ventanas viejas de matplotlib
+        self.grafica = Funciones.plano(self.ps_card) # Dibuja una carta nuevecita
 
         
         

@@ -223,7 +223,7 @@ def activar_hover(dibujos_puntos):
         if punto.H > 1000:
             punto.H = punto.H / 1000
 
-        texto = f"{punto.nombre}\nTdb: {punto.Tdb:.2f} °C\nW: {punto.W*1000:.2f} g/kg\nH: {punto.H:.2f} kJ/kg\nHR: {punto.RH*100:.2f} %\n Twb: {punto.Twb:.2f} °C\n Tdp: {punto.TDp:.2f} °C\n v: {punto.v:.2f} m3/kg\n d: {punto.d:.2f} kg/m3"
+        texto = f"{punto.nombre}\nTdb: {punto.Tdb:.2f} °C\nW: {punto.W*1000:.2f} g/kg\nH: {punto.H:.2f} kJ/kg\nHR: {punto.RH*100:.2f} %\n Twb: {punto.Twb:.2f} °C\n Tdp: {punto.TDp:.2f} °C\n $V$: {punto.v:.2f} m3/kg\n d: {punto.d:.2f} kg/m3"
 
         sel.annotation.set_text(texto)
         sel.annotation.get_bbox_patch().set(fc="white", alpha=0.9)

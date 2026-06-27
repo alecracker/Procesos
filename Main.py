@@ -19,8 +19,7 @@ ps_card = Funciones.carta_create()
 
 #CREAR INTERFAZ
 
-grafica = Funciones.plano(ps_card) 
-simulador = Interfaz.VentanaPrincipal(grafica)
+simulador = Interfaz.VentanaPrincipal(ps_card)
 
 
 
