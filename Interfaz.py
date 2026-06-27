@@ -35,7 +35,7 @@ class VentanaPrincipal:
 
         
         # Titulo
-        self.etiqueta_titulo = ttk.Label(self.frame_izquierdo, text="Software de Procesos Psicrometricos", font=("Arial", 20, "bold"), foreground="black")
+        self.etiqueta_titulo = ttk.Label(self.frame_izquierdo, text="Software de Procesos Psicrométricos", font=("Arial", 20, "bold"), foreground="black")
 
         # Definicion de caso
         self.etiqueta_def_caso = ttk.Label(self.frame_izquierdo, text="Definición de Caso", font=("Arial", 16, "bold"), foreground="black")
@@ -127,7 +127,8 @@ class VentanaPrincipal:
         self.boton_Editar = ttk.Button(self.frame_izquierdo, text="Editar Punto", command=self.accion_editar)
         self.boton_resetear = ttk.Button(self.frame_izquierdo, text="Limpiar Campos", command=self.accion_limpiar)
         self.boton_simular = ttk.Button(self.frame_izquierdo, text="Simular", command=self.accion_simular)
-        self.boton_trazo = ttk.Button(self.frame_izquierdo, text="Trazo", command=self.enlistar_puntos)
+        self.boton_trazo = ttk.Button(self.frame_izquierdo, text="Trazo", command=self.accion_trazo)
+
 
         # Direcciones ETIQUETAS
         self.etiqueta_proceso.grid(row=3, column=0, pady=0, padx=10, sticky="e")
@@ -423,6 +424,37 @@ class VentanaPrincipal:
             
             
         return lista_puntos
+    def accion_trazo(self):
+        # 1. Traer los puntos guardados
+        self.lista_puntos = self.enlistar_puntos()
+        
+        # 2. Validar que haya suficientes puntos
+        if len(self.lista_puntos) < 2:
+            msg.showwarning("Atención", "¡Necesitas al menos 2 puntos guardados para armar un trazo!")
+            return
+
+        # 3. Limpiar y crear lienzo nuevo (igual que en la simulación)
+        plt.close('all')
+        self.grafica = Funciones.plano(self.ps_card)
+        dibujos_puntos = []
+
+        # 4. Dibujar las bolitas (puntos)
+        for nombre, punto in self.puntos_guardados.items():
+            marcador = punto.dibujo(self.grafica)
+            marcador.datos_psicrometricos = punto
+            dibujos_puntos.append(marcador)
+            
+        # 5. Conectar los puntos con líneas
+        if len(self.lista_puntos) == 2:
+            self.traza_2_puntos(self.lista_puntos[0], self.lista_puntos[1])
+        elif len(self.lista_puntos) >= 3:
+            self.traza_3_puntos(self.lista_puntos[0], self.lista_puntos[1], self.lista_puntos[2])
+
+        # 6. Activar interacciones y mostrar
+        Funciones.activar_hover(dibujos_puntos)
+        plt.tight_layout()
+        plt.show()
+
     
     def actualizar_unidades(self, event=None):
         # Nuestro diccionario "traductor" de unidades
@@ -478,7 +510,7 @@ class VentanaPrincipal:
                 self.lista_puntos[1].d = pb.GetMoistAirDensity(self.lista_puntos[1].Tdb,self.lista_puntos[1].W,self.lista_puntos[1].p)
                 self.lista_puntos[1].H = self.lista_puntos[1].H / 1000
                     
-                self.traza_2_puntos(self.lista_puntos[0], self.lista_puntos[1])
+                
                 print(self.lista_puntos[0].Tdb,self.lista_puntos[0].W,self.lista_puntos[0].RH,self.lista_puntos[0].Twb,self.lista_puntos[0].TDp,self.lista_puntos[0].H/1000,self.lista_puntos[0].v,self.lista_puntos[0].d)
                 print(self.lista_puntos[1].Tdb,self.lista_puntos[1].W,self.lista_puntos[1].RH,self.lista_puntos[1].Twb,self.lista_puntos[1].TDp,self.lista_puntos[1].H,self.lista_puntos[1].v,self.lista_puntos[1].d)
         if proceso_elegido == "Humidificacion":
@@ -487,7 +519,7 @@ class VentanaPrincipal:
                 msg.showerror("Error", "Las humidificaciones utilizan 2 puntos")
                 return 
                     
-            self.traza_2_puntos(self.lista_puntos[0], self.lista_puntos[1])
+           
             print(self.lista_puntos[0].Tdb,self.lista_puntos[0].W,self.lista_puntos[0].RH,self.lista_puntos[0].Twb,self.lista_puntos[0].TDp,self.lista_puntos[0].H/1000,self.lista_puntos[0].v,self.lista_puntos[0].d)
             print(self.lista_puntos[1].Tdb,self.lista_puntos[1].W,self.lista_puntos[1].RH,self.lista_puntos[1].Twb,self.lista_puntos[1].TDp,self.lista_puntos[1].H/1000,self.lista_puntos[1].v,self.lista_puntos[1].d)
 
@@ -497,7 +529,7 @@ class VentanaPrincipal:
                 messagebox.showerror("Error" , "Las deshumidificaciones utilizan 2 puntos")
                 return 
             
-            self.traza_2_puntos(self.lista_puntos[0], self.lista_puntos[1])
+            
             print(self.lista_puntos[0].Tdb,self.lista_puntos[0].W,self.lista_puntos[0].RH,self.lista_puntos[0].Twb,self.lista_puntos[0].TDp,self.lista_puntos[0].H/1000,self.lista_puntos[0].v,self.lista_puntos[0].d)
             print(self.lista_puntos[1].Tdb,self.lista_puntos[1].W,self.lista_puntos[1].RH,self.lista_puntos[1].Twb,self.lista_puntos[1].TDp,self.lista_puntos[1].H/1000,self.lista_puntos[1].v,self.lista_puntos[1].d)
 
@@ -519,7 +551,7 @@ class VentanaPrincipal:
             #Densidad
             self.lista_puntos[1].d = pb.GetMoistAirDensity(self.lista_puntos[1].Tdb, self.lista_puntos[1].W, self.lista_puntos[1].p)
             
-            self.traza_2_puntos(self.lista_puntos[0], self.lista_puntos[1])
+           
             print(self.lista_puntos[0].Tdb ,self.lista_puntos[0].W,self.lista_puntos[0].RH,self.lista_puntos[0].Twb,self.lista_puntos[0].TDp,self.lista_puntos[0].H/1000,self.lista_puntos[0].v,self.lista_puntos[0].d)
             print(self.lista_puntos[1].Tdb,self.lista_puntos[1].W,self.lista_puntos[1].RH,self.lista_puntos[1].Twb,self.lista_puntos[1].TDp,self.lista_puntos[1].H/1000,self.lista_puntos[1].v,self.lista_puntos[1].d)
 
@@ -572,7 +604,7 @@ class VentanaPrincipal:
                 self.lista_puntos.append(nuevo_punto)
 
                 self.puntos_guardados["Punto Mezcla"] = self.lista_puntos[2]
-                self.traza_3_puntos(self.lista_puntos[0], self.lista_puntos[1], self.lista_puntos[2])
+               
                 
                 # Ventana emergente de resultados
             
@@ -622,7 +654,7 @@ class VentanaPrincipal:
                 self.lista_puntos.append(nuevo_punto)
 
                 self.puntos_guardados["Punto Mezcla"] = self.lista_puntos[2]
-                self.traza_3_puntos(self.lista_puntos[0], self.lista_puntos[1], self.lista_puntos[2])
+                
                 
                 # Ventana emergente con resultados
             
@@ -639,6 +671,7 @@ class VentanaPrincipal:
             
             marcador.datos_psicrometricos = punto
             dibujos_puntos.append(marcador)
+        
 
         Funciones.activar_hover(dibujos_puntos)
         #self.ventana.destroy()
