@@ -215,7 +215,29 @@ class VentanaPrincipal:
             
             presion = self.presion_text.get()
         
-            
+               # 1. Validar que no estén vacíos
+        if self.Prop_1_text.get() == "" or self.Prop_2_text.get() == "":
+            msg.showwarning("Cuidado", "El punto guardado no tiene propiedades")
+            return
+        
+        # 2. Try/Except para validar que sí sean números y no letras
+        try:
+            float(self.Prop_1_text.get())
+            float(self.Prop_2_text.get())
+        except ValueError:
+            msg.showerror("Error", "¡Debes ingresar solo números en las propiedades!")
+            return
+        
+        # 3. Validar que sí hayan seleccionado Bulbo Seco en alguna de las dos listas
+        if self.Prop_1.get() != "Temperatura de bulbo seco" and self.Prop_2.get() != "Temperatura de bulbo seco":
+            msg.showerror("Error", "Las propiedades no son correctas (Se necesita la Temperatura de bulbo seco)")
+            return
+        
+        # 4. Validar que seleccionaron un proceso
+        if self.lista_procesos.get() == "":
+            msg.showwarning("Cuidado", "El punto guardado no tiene proceso")
+            return
+
         datos_punto = {
                 "proceso" : self.lista_procesos.get(),
 
@@ -381,13 +403,13 @@ class VentanaPrincipal:
             p2 = self.lista_puntos[1]
 
             if p1.tipo_flujo == "Flujo masico" and p2.tipo_flujo == "Flujo masico":
-                masa_p1 = p1.flujo 
-                masa_p2 = p2.flujo 
+                flujo_masico_p1 = p1.flujo 
+                flujo_masico_p2 = p2.flujo 
 
-                masa_total = masa_p1 + masa_p2
+                flujo_masico_total = flujo_masico_p1 + flujo_masico_p2
                 
-                H3 = (p1.H * masa_p1 + p2.H * masa_p2) / masa_total
-                W3 = (p1.W * masa_p1 + p2.W * masa_p2) / masa_total
+                H3 = (p1.H * flujo_masico_p1 + p2.H * flujo_masico_p2) / flujo_masico_total
+                W3 = (p1.W * flujo_masico_p1 + p2.W * flujo_masico_p2) / flujo_masico_total
 
                 T3 = pb.GetTDryBulbFromEnthalpyAndHumRatio(H3 * 1000 , W3)
                 RH3 = pb.GetRelHumFromHumRatio(T3, W3, p1.p)
@@ -424,19 +446,19 @@ class VentanaPrincipal:
                 self.traza_3_puntos(self.lista_puntos[0], self.lista_puntos[1], self.lista_puntos[2])
                 
                 # Ventana emergente de resultados
-                calor_total = masa_total * H3
-                humedad_total = masa_total * W3 * 3600 # kg/h
-                msg.showinfo("Resultados de Mezcla", f"Flujo Másico Total: {masa_total:.2f} kg/s\nCalor Total de la Mezcla: {calor_total:.2f} kW\nHumedad Total: {humedad_total:.2f} kg/h")
+            
+                humedad_total = flujo_masico_total * W3 * 3600 # kg/h
+                msg.showinfo("Resultados de Mezcla", f"Flujo Másico Total: {flujo_masico_total:.2f} kg/s\nHumedad Total: {humedad_total:.2f} kg/h")
                 
             elif p1.tipo_flujo == "Flujo volumetrico" and p2.tipo_flujo == "Flujo volumetrico":
                 # Convertir flujo volumétrico a flujo másico dividiendo entre volumen específico
-                masa_p1 = p1.flujo / p1.v
-                masa_p2 = p2.flujo / p2.v
+                flujo_masico_p1 = p1.flujo / p1.v
+                flujo_masico_p2 = p2.flujo / p2.v
 
-                masa_total = masa_p1 + masa_p2
+                flujo_masico_total = flujo_masico_p1 + flujo_masico_p2
                 
-                H3 = (p1.H * masa_p1 + p2.H * masa_p2) / masa_total
-                W3 = (p1.W * masa_p1 + p2.W * masa_p2) / masa_total
+                H3 = (p1.H * flujo_masico_p1 + p2.H * flujo_masico_p2) / flujo_masico_total
+                W3 = (p1.W * flujo_masico_p1 + p2.W * flujo_masico_p2) / flujo_masico_total
 
                 T3 = pb.GetTDryBulbFromEnthalpyAndHumRatio(H3 * 1000 , W3)
                 RH3 = pb.GetRelHumFromHumRatio(T3, W3, p1.p)
@@ -445,7 +467,7 @@ class VentanaPrincipal:
                 v3 = pb.GetMoistAirVolume(T3, W3, p1.p)
                 d3 = pb.GetMoistAirDensity(T3, W3, p1.p)
                 
-                flujo_vol_total = masa_total * v3
+                flujo_vol_total = flujo_masico_total * v3
             
                 nuevo_punto = Punto(
                     "Punto Mezcla",     

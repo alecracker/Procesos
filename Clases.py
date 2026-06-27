@@ -149,6 +149,36 @@ class Punto: #CLase = MOLDE
                 self.v = pb.GetMoistAirVolume(self.Tdb, self.W, self.p)
                 #Densidad
                 self.d = pb.GetMoistAirDensity(self.Tdb, self.W, self.p)
+            if und1 == "Temperatura de bulbo seco" and und2 == "Humedad absoluta" or und1 == "Humedad absoluta" and und2 == "Temperatura de bulbo seco":
+                
+                # Identificamos cuál propiedad es cuál
+                if und1 == "Temperatura de bulbo seco":
+                    self.Tdb = prop1
+                    self.W = prop2
+                elif und1 == "Humedad absoluta":
+                    self.W = prop1
+                    self.Tdb = prop2
+                elif und2 == "Temperatura de bulbo seco":
+                    self.Tdb = prop2
+                    self.W = prop1
+                elif und2 == "Humedad absoluta":
+                    self.W = prop2
+                    self.Tdb = prop1
+                
+                # Convertimos los datos a números decimales
+                self.Tdb = float(self.Tdb)
+                # IMPORTANTE: Como tu usuario escribe la Humedad Absoluta en gramos [g/kg], 
+                # la librería necesita el dato en [kg/kg], por lo que hay que dividirlo entre 1000
+                self.W = float(self.W) / 1000.0
+                
+                # ¡Que trabaje psychrolib! Calculamos el resto de las propiedades
+                self.RH = pb.GetRelHumFromHumRatio(self.Tdb, self.W, self.p)
+                self.TDp = pb.GetTDewPointFromHumRatio(self.Tdb, self.W, self.p)
+                self.Twb = pb.GetTWetBulbFromHumRatio(self.Tdb, self.W, self.p)
+                self.H = pb.GetMoistAirEnthalpy(self.Tdb, self.W)
+                self.v = pb.GetMoistAirVolume(self.Tdb, self.W, self.p)
+                self.d = pb.GetMoistAirDensity(self.Tdb, self.W, self.p)
+
         #Caso 2
         if self.proceso == 'Mezcla de aire':
             if und1 == "Temperatura de bulbo seco" and und2 == "Humedad relativa" or und1 == "Humedad relativa" and und2 == "Temperatura de bulbo seco":
