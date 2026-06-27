@@ -1,6 +1,9 @@
+# pyrefly: ignore [missing-import]
 import psychrochart as pc
-import matplotlib.pyplot as plt
-
+# pyrefly: ignore [missing-import]
+import matplotlib.pyplot as plt 
+# pyrefly: ignore [missing-import]
+import mplcursors as mpl
 
 def carta_create():
 
@@ -8,10 +11,40 @@ def carta_create():
     carta = pc.PsychroChart.create()
 
     #Parametros de la carta
+
+        # 1. Fondo y Cuadrícula Base (Gris, punteadas y finas para que no estorben)
+    carta.config.constant_dry_temp.color = "lightgray"
+    carta.config.constant_dry_temp.linestyle = ":"
+    carta.config.constant_dry_temp.linewidth = 0.8
+    
+    carta.config.constant_humidity.color = "lightgray"
+    carta.config.constant_humidity.linestyle = ":"
+    carta.config.constant_humidity.linewidth = 0.8
+
+    # 2. Curvas Principales HR (Verde esmeralda/Teal, sólida y más gruesa)
+    carta.config.constant_rh.color = "teal" 
+    carta.config.constant_rh.linestyle = "-"
+    carta.config.constant_rh.linewidth = 1.5
+
+    # 3. Entalpía (Rojo/Naranja, sólida y muy fina)
+    carta.config.constant_h.color = "red"
+    carta.config.constant_h.linestyle = "-"
+    carta.config.constant_h.linewidth = 0.5
+
+    # 4. Temperatura de Bulbo Húmedo (Azul claro, discontinua)
+    carta.config.constant_wet_temp.color = "deepskyblue"
+    carta.config.constant_wet_temp.linestyle = "--"
+    carta.config.constant_wet_temp.linewidth = 1
+
+    # 5. Volumen Específico (Púrpura, mixta de punto y raya)
+    carta.config.constant_v.color = "darkmagenta"
+    carta.config.constant_v.linestyle = "-."
+    carta.config.constant_v.linewidth = 1
+
     carta.config.limits.range_temp_c = (-10.0,55.0)
-    carta.config.limits.range_humidity_g_kg = (0,33.0)
+    carta.config.limits.range_humidity_g_kg = (0,33)
     carta.config.saturation.linewidth = 1
-    carta.config.constant_wet_temp.color = "darkblue"
+    carta.config.constant_wet_temp.color = "green"
     carta.config.chart_params.constant_humid_label_step = 1
     carta.config.chart_params.with_constant_h = True
     carta.config.chart_params.constant_h_step = 5
@@ -142,17 +175,17 @@ def habilitar_zoom_scroll(ax, factor_zoom=1.2):
     ax.figure.canvas.mpl_connect('motion_notify_event', move)
 
 def linea2(punto1,punto2):
-    lineX2 = [punto1.Tdb, punto2.Tdb]
-    lineY2 = [punto1.W, punto2.W]
+    lineX2 = [punto1.Tdb, punto2.Tdb] #X2 es igual a los puntos en X de los dos puntos
+    lineY2 = [punto1.W*1000, punto2.W*1000] #Y2 es igual a los puntos en Y de los dos puntos
 
-    plt.plot(lineX2,lineY2)
+    plt.plot(lineX2,lineY2) #Plot lo que hace es dibujar lineas
     return
 
 def linea3(punto1, punto2, punto3):
     
 
      lineVX = [punto1.Tdb, punto2.Tdb, punto3.Tdb]
-     lineVY = [punto1.W, punto2.W, punto3.W]
+     lineVY = [punto1.W*1000, punto2.W*1000, punto3.W*1000]
 
      plt.plot(lineVX,lineVY)
 
@@ -174,11 +207,32 @@ def plano(card):
         if "kJ/kg" in texto.get_text():
             texto.set_rotation(-19)
     
-        # Aumentamos los márgenes a 15% (0.15) abajo y a la derecha
+  
     
     fig.savefig("Carta.svg")
 
     return ax
 
+def activar_hover(dibujos_puntos):
+    # Inicializamos el cursor con la lista que recibimos
+    cursor_personalizado = mpl.cursor(dibujos_puntos, hover=True)
+    
+    @cursor_personalizado.connect("add")
+    def al_pasar_raton(sel):
+        punto = sel.artist.datos_psicrometricos
+        if punto.H > 1000:
+            punto.H = punto.H / 1000
+
+        texto = f"{punto.nombre}\nTdb: {punto.Tdb:.2f} °C\nW: {punto.W*1000:.2f} g/kg\nH: {punto.H:.2f} kJ/kg\nHR: {punto.RH*100:.2f} %\n Twb: {punto.Twb:.2f} °C\n Tdp: {punto.TDp:.2f} °C\n v: {punto.v:.2f} m3/kg\n d: {punto.d:.2f} kg/m3"
+
+        sel.annotation.set_text(texto)
+        sel.annotation.get_bbox_patch().set(fc="white", alpha=0.9)
+        sel.annotation.arrow_patch.contains = lambda event: (False, {})
+
+
+
+    
+    
+    return cursor_personalizado 
 
 
