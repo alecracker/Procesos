@@ -210,7 +210,7 @@ class VentanaPrincipal:
         print("Traza de 2 puntos")
         
     def traza_3_puntos(self,punto1, punto2, punto3):
-            Funciones.linea3(punto1, punto2, punto3)
+            Funciones.linea3(punto1, punto3, punto2)
             print("Traza de 3 puntos")
             
     def accion_añadir(self):
@@ -450,10 +450,7 @@ class VentanaPrincipal:
         elif len(self.lista_puntos) >= 3:
             self.traza_3_puntos(self.lista_puntos[0], self.lista_puntos[1], self.lista_puntos[2])
 
-        # 6. Activar interacciones y mostrar
-        Funciones.activar_hover(dibujos_puntos)
-        plt.tight_layout()
-        plt.show()
+        
 
     
     def actualizar_unidades(self, event=None):
@@ -659,7 +656,7 @@ class VentanaPrincipal:
                 # Ventana emergente con resultados
             
                 humedad_total = flujo_masico_total * W3 * 3600
-                msg.showinfo("Resultados de Mezcla", f"Flujo Volumétrico Total: {flujo_vol_total:.2f} m³/s\nHumedad Total: {humedad_total:.2f} kg/h")
+                msg.showinfo("Resultados de Mezcla", f"Flujo Volumétrico Total: {flujo_vol_total:.2f} m³/s\n")
             
         plt.close('all') # Cierra ventanas viejas de matplotlib
         self.grafica = Funciones.plano(self.ps_card) # Dibuja una carta nuevecita
@@ -676,5 +673,12 @@ class VentanaPrincipal:
         Funciones.activar_hover(dibujos_puntos)
         #self.ventana.destroy()
         plt.tight_layout()
+
+        if self.lista_procesos.get() != "Mostrar Punto":    
+            if len(self.lista_puntos) == 2:
+                self.traza_2_puntos(self.lista_puntos[0], self.lista_puntos[1])
+            elif len(self.lista_puntos) >= 3:
+                self.traza_3_puntos(self.lista_puntos[0], self.lista_puntos[1], self.lista_puntos[2])
+
             
         plt.show()

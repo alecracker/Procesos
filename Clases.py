@@ -33,7 +33,8 @@ class Punto: #CLase = MOLDE
         return marcador
 
     def calculo(self,prop1, prop2 , und1, und2):
-        if self.proceso == "Mostrar Punto":
+        if self.proceso == "Mostrar Punto" or self.proceso == "Mezcla de aire":
+
             if und1 == "Temperatura de bulbo seco" and und2 == "Humedad relativa" or und1 == "Humedad relativa" and und2 == "Temperatura de bulbo seco":
                 if und1 == "Temperatura de bulbo seco":
                     self.Tdb = prop1
