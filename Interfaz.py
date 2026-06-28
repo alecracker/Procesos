@@ -206,11 +206,34 @@ class VentanaPrincipal:
     def traza_2_puntos(self,punto1, punto2):
             
             
-        linea2(punto1,punto2)
-        print("Traza de 2 puntos")
+        Funciones.linea2(punto1,punto2)
         
+        self.grafica.annotate(
+            '', 
+            xy=(punto2.Tdb, punto2.W * 1000), 
+            xytext=(punto1.Tdb, punto1.W * 1000),
+            arrowprops=dict(arrowstyle="->", color='blue', lw=2)
+        )
+        print("Traza de 2 puntos")
+
     def traza_3_puntos(self,punto1, punto2, punto3):
+            
             Funciones.linea3(punto1, punto3, punto2)
+            # Flecha del Punto 1 hacia la Mezcla (Punto 3)
+            self.grafica.annotate(
+            '', 
+            xy=(punto3.Tdb, punto3.W * 1000),     # Destino
+            xytext=(punto1.Tdb, punto1.W * 1000), # Inicio
+            arrowprops=dict(arrowstyle="->", color='blue', lw=2)
+        )
+        
+        # Flecha del Punto 2 hacia la Mezcla (Punto 3)
+            self.grafica.annotate(
+            '', 
+            xy=(punto3.Tdb, punto3.W * 1000),     # Destino
+            xytext=(punto2.Tdb, punto2.W * 1000), # Inicio
+            arrowprops=dict(arrowstyle="->", color='blue', lw=2)
+        )
             print("Traza de 3 puntos")
             
     def accion_añadir(self):
@@ -438,7 +461,7 @@ class VentanaPrincipal:
         self.grafica = Funciones.plano(self.ps_card)
         dibujos_puntos = []
 
-        # 4. Dibujar las bolitas (puntos)
+        # 4. Dibujar los puntos
         for nombre, punto in self.puntos_guardados.items():
             marcador = punto.dibujo(self.grafica)
             marcador.datos_psicrometricos = punto
@@ -449,6 +472,9 @@ class VentanaPrincipal:
             self.traza_2_puntos(self.lista_puntos[0], self.lista_puntos[1])
         elif len(self.lista_puntos) >= 3:
             self.traza_3_puntos(self.lista_puntos[0], self.lista_puntos[1], self.lista_puntos[2])
+        
+        if self.lista_procesos.get() == "Mostrar Punto":
+            plt.show()
 
         
 
@@ -488,13 +514,14 @@ class VentanaPrincipal:
 
            
             if len(self.lista_puntos) != 2:
-                msg.showwerror("Los enfriamientos y calentamientos utilizan 2 puntos")
+                msg.showerror("Los enfriamientos y calentamientos utilizan 2 puntos")
                 return  
             elif len(self.lista_puntos) == 2:
               
                 self.lista_puntos[1].W = self.lista_puntos[0].W
                 self.lista_puntos[1].RH = pb.GetRelHumFromHumRatio(self.lista_puntos[1].Tdb, self.lista_puntos[1].W, self.lista_puntos[1].p)
-                    
+                if self.lista_puntos[1].RH > 1.0:
+                    msg.showwarning("Condensación detectada", "La temperatura es tan baja que el agua se condensa. El enfriamiento sensible ideal ya no es válido.")
                 #Entalpia
                 self.lista_puntos[1].H = pb.GetMoistAirEnthalpy(self.lista_puntos[1].Tdb, self.lista_puntos[1].W)
                 #Volumen especifico
@@ -569,7 +596,7 @@ class VentanaPrincipal:
                 H3 = (p1.H * flujo_masico_p1 + p2.H * flujo_masico_p2) / flujo_masico_total
                 W3 = (p1.W * flujo_masico_p1 + p2.W * flujo_masico_p2) / flujo_masico_total
 
-                T3 = pb.GetTDryBulbFromEnthalpyAndHumRatio(H3 * 1000 , W3)
+                T3 = pb.GetTDryBulbFromEnthalpyAndHumRatio(H3 , W3)
                 RH3 = pb.GetRelHumFromHumRatio(T3, W3, p1.p)
                 TDp3 = pb.GetTDewPointFromRelHum(T3, RH3)
                 Twb3 = pb.GetTWetBulbFromTDewPoint(T3, TDp3, p1.p)
@@ -618,7 +645,7 @@ class VentanaPrincipal:
                 H3 = (p1.H * flujo_masico_p1 + p2.H * flujo_masico_p2) / flujo_masico_total
                 W3 = (p1.W * flujo_masico_p1 + p2.W * flujo_masico_p2) / flujo_masico_total
 
-                T3 = pb.GetTDryBulbFromEnthalpyAndHumRatio(H3 * 1000 , W3)
+                T3 = pb.GetTDryBulbFromEnthalpyAndHumRatio(H3, W3)
                 RH3 = pb.GetRelHumFromHumRatio(T3, W3, p1.p)
                 TDp3 = pb.GetTDewPointFromRelHum(T3, RH3)
                 Twb3 = pb.GetTWetBulbFromTDewPoint(T3, TDp3, p1.p)

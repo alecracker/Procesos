@@ -63,7 +63,7 @@ def habilitar_zoom_scroll(ax, factor_zoom=1.2):
      
     #Evento captura el evento del mouse
     def zoom(evento):
-        print("¡La computadora sintió el ratón! Giraste hacia:", evento.button)
+        #print("¡La computadora sintió el ratón! Giraste hacia:", evento.button)
         if evento.xdata is None or evento.ydata is None: return #Ver si el cursor esta dentro de la grafica
         
         #Ver hacia donde gira el scroll y opera segun a donde vaya
